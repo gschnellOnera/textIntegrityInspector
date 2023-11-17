@@ -21,8 +21,7 @@ build:
   - python -V                                   # Print out python version for debugging
   - pip install pipenv
   - pipenv install --dev
-  - pipenv run pytest  --cov-report=xml:coverage.xml  --cov=textIntegrityInspector/  --junit-xml=junit.xml
-  - cat coverage.xml | grep '<package name="." line-rate='
+  - pipenv run pytest  --cov-report=xml:coverage.xml  --cov=textIntegrityInspector/  --junit-xml=junit.xml --cov-report term
   artifacts:
     paths: 
     - coverage.xml
@@ -32,4 +31,4 @@ build:
       coverage_report: 
         coverage_format: cobertura
         path: coverage.xml
-  coverage: '/line-rate="\d+\.\d+/'
+  coverage: '/TOTAL.*\s([.\d]+)%/'
