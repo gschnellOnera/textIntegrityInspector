@@ -20,6 +20,11 @@ def createFileUTF_8(dir, name,  text):
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(text)
 
+def createFilebin(dir, name,  text):
+    file_path = os.path.join(dir, name)
+    with open(file_path, 'wb') as file:
+        file.write(text)
+
 @pytest.fixture(scope='function')
 def root():
     """create tree test
@@ -29,6 +34,7 @@ def root():
     |   +--- excluded_dir
     |   |   +--- autres2
     |   |   |   +--- notfrenshFile.txt
+    |   |   |   +--- notutf8.dumy
     |   +--- included_dir
     |   |   +--- autres
     |   |   |   +--- frenshFile.txt
@@ -37,10 +43,11 @@ def root():
     with tempfile.TemporaryDirectory() as root:
         included_dir = os.path.join(root, 'insert','included_dir', 'autres')
         os.makedirs(included_dir)
-        createFileUTF_8(dir=included_dir, name='frenshFile.txt', text="Ceci est un texte valide en français.\ne contenant que des caractère Français")
+        createFileUTF_8(dir=included_dir, name='frenshFile.txt', text="Ceci est un texte valide en français.\n\r\te contenant que des caractère Français")
         excluded_dir = os.path.join(root, 'insert','excluded_dir', 'autres2')
         os.makedirs(excluded_dir)
         createFileUTF_8(dir=excluded_dir, name='notfrenshFile.txt', text="Ceci est un texte non-valide en français.\nnontenant de caractère ¤ à la \n 24 colone de la ligne 2.")
+        createFilebin(dir=excluded_dir, name='notutf8.dumy', text=b'ab\x01c\xf5\xde\x02\xee\x01\x02\xf3\x01\x02\03f' + "¿�𝄞𠀀".encode())
         yield root
         pass # automatic remove root directory
 
@@ -50,6 +57,8 @@ def test_validate_directory_valid(root):
         textIntegrityChar = TextIntegrityChar()
         textIntegrityChar.validate_directory(os.path.join(root, 'insert', 'included_dir'), extensions=['txt'], exclude_dirs=[], exclude_files=[], language='fr', additional_chars='')
         assert len(textIntegrityChar.lErrors) == 0
+        textIntegrityChar.print_lErrors()
+        textIntegrityChar.print_speCar()
 
 
 def test_validate_directory_invalid_language(root):
@@ -62,6 +71,61 @@ def test_validate_directory_invalid_language(root):
         assert textIntegrityChar.lErrors[0]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notfrenshFile.txt')
         assert textIntegrityChar.lErrors[0]['line'] == 2
         assert textIntegrityChar.lErrors[0]['col'] == 24
+        textIntegrityChar.print_lErrors()
+        textIntegrityChar.print_speCar()
+
+def test_validate_directory_noUTF_8(root):
+
+        textIntegrityChar = TextIntegrityChar()
+        # Valide le fichier avec la langue spécifiée
+        textIntegrityChar.validate_directory(os.path.join(root, 'insert', 'excluded_dir'), extensions=['dumy'], exclude_dirs=[], exclude_files=[], language='fr', additional_chars='')
+        assert len(textIntegrityChar.lErrors) == 9
+        #'file': self.currentFile, 'line' : self.numLine, 'col': self.numCol, 'carBin': self.notAscii
+        for i in range(len(textIntegrityChar.lErrors)) :
+            assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+            assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[0]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[0]['col'] == 3
+        assert textIntegrityChar.lErrors[0]['carBin'] == b'\x01'
+        assert textIntegrityChar.lErrors[0]['utf-8'] == b'\x01'.decode()
+
+        assert textIntegrityChar.lErrors[1]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[1]['col'] == 5
+        assert textIntegrityChar.lErrors[1]['carBin'] == b'\xf5'
+
+        assert textIntegrityChar.lErrors[2]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[2]['col'] == 6
+        assert textIntegrityChar.lErrors[2]['carBin'] == b'\xde\x02'
+
+        assert textIntegrityChar.lErrors[3]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[3]['col'] == 7
+        assert textIntegrityChar.lErrors[3]['carBin'] == b'\xee\x01\x02'
+
+        assert textIntegrityChar.lErrors[4]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[4]['col'] == 8
+        assert textIntegrityChar.lErrors[4]['carBin'] == b'\xf3\x01\x02\03'
+
+        assert textIntegrityChar.lErrors[5]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[5]['col'] == 10
+        assert textIntegrityChar.lErrors[5]['carBin'] == '¿'.encode()
+        assert textIntegrityChar.lErrors[5]['utf-8'] == '¿'
+
+        assert textIntegrityChar.lErrors[6]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[6]['col'] == 11
+        assert textIntegrityChar.lErrors[6]['carBin'] == '�'.encode()
+        assert textIntegrityChar.lErrors[6]['utf-8'] == '�'
+
+        assert textIntegrityChar.lErrors[7]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[7]['col'] == 12
+        assert textIntegrityChar.lErrors[7]['carBin'] == '𝄞'.encode()
+        assert textIntegrityChar.lErrors[7]['utf-8'] == '𝄞'
+
+        assert textIntegrityChar.lErrors[8]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[8]['col'] == 13
+        assert textIntegrityChar.lErrors[8]['carBin'] == '𠀀'.encode()
+        assert textIntegrityChar.lErrors[8]['utf-8'] == '𠀀'
+        textIntegrityChar.print_lErrors()
+        textIntegrityChar.print_speCar()
 
 
 def test_validate_directory_exclude_dirs():

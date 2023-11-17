@@ -7,5 +7,12 @@
         "tests",
         "-p",
         "*test*.py"
-    ]
+    ],
+    "python.testing.pytestArgs": [
+        "--cov-report=xml:cov.xml",
+        "--cov=textIntegrityInspector"
+    ],
+    "coverage-gutters.coverageBaseDir": "textIntegrityInspecto/**",
+    "coverage-gutters.showGutterCoverage": true,
+    "coverage-gutters.showLineCoverage": true
 }

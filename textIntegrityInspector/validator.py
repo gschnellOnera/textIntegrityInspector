@@ -38,14 +38,24 @@ class TextIntegrityChar :
     def is_valid_char(self, byte):
                 
         isValide = True
-        if int(byte.hex(), 16) > 0x7f : #see https://fr.wikipedia.org/wiki/UTF-8
-            #Si first byte
-            if not self.notAscii:
-                if int(byte.hex(), 16) >= 0xc2 and int(byte.hex(), 16) <= 0xdf: self.lenNotAsciiRequire = 2
-                elif int(byte.hex(), 16) >= 0xe0 and int(byte.hex(), 16) <= 0xef: self.lenNotAsciiRequire = 3
-                elif int(byte.hex(), 16) >= 0xf0 and int(byte.hex(), 16) <= 0xf4: self.lenNotAsciiRequire = 4
-                else : self.lenNotAsciiRequire = 1 # not utf-8
+        valHex = int(byte.hex(), 16)
+        
+        if not self.notAscii: # not in read utf-8 with more then 1 byte 
+            if valHex < 0x1f and byte not in "\t\n\r".encode() :  # Control char see https://fr.wikipedia.org/wiki/Caract%C3%A8re_de_contr%C3%B4le
+                self.lenNotAsciiRequire = 1
+                self.notAscii += byte
+            elif valHex > 0x7f : #see https://fr.wikipedia.org/wiki/UTF-8
+                #Si first byte
+                    if valHex >= 0xc2 and valHex <= 0xdf: self.lenNotAsciiRequire = 2
+                    elif valHex >= 0xe0 and valHex <= 0xef: self.lenNotAsciiRequire = 3
+                    elif valHex >= 0xf0 and valHex <= 0xf4: self.lenNotAsciiRequire = 4
+                    else : self.lenNotAsciiRequire = 1 # not utf-8
+                    self.notAscii += byte
+            else :
+                self.notAscii = b'' # ASCII display char
+        else :
             self.notAscii += byte
+
         if self.notAscii and len(self.notAscii) == self.lenNotAsciiRequire:
                 self.numCol -= self.lenNotAsciiRequire - 1
                 isValide = self.appendListErrors()
@@ -74,7 +84,7 @@ class TextIntegrityChar :
         try :
             decode = self.notAscii.decode()
             if not decode in self.spetialChars:
-                error = {'errorType': 'NotFrench', 'utf-8': decode }
+                error = {'errorType': 'NotInLanguage', 'utf-8': decode }
         except UnicodeDecodeError:
             error = {'errorType': 'NotUtf-8' }
         if error:
@@ -85,16 +95,19 @@ class TextIntegrityChar :
 
     def print_lErrors(self):
         for error in self.lErrors:
-            if error['errorType'] == 'NotFrench':
+            if error['errorType'] == 'NotInLanguage':
                 print(f"{error['utf-8']}: {error['file']}: ({error['line']},{error['col']}), le caractère {error['utf-8']} n'est pas reconnue comme un caractère affichable en français!")
             elif error['errorType'] == 'NotUtf-8':
                 print(f"{error['carBin']}: {error['file']} ({error['line']},{error['col']}): le caractère {error['carBin']}  n'est pas en utf-8!")
             else:
                 print(error)
+        if not self.lErrors:
+            print("No bad characters found")
+
     def print_speCar(self):
         lCar = set()
         for error in self.lErrors:
-            if error['errorType'] == 'NotFrench':
+            if error['errorType'] == 'NotInLanguage':
                 lCar.add(error['utf-8'])
         for c in lCar:
             print(f'{c}')
@@ -104,9 +117,7 @@ class TextIntegrityChar :
         self.spetialChars = additional_chars
         if language == 'fr':
             self.spetialChars += defaultSpecialFrenshChar
-        else:
-            self.spetialChars = defaultSpecialFrenshChar
-        #TODO unic
+        #TODO uniq
         return self.spetialChars
 
     def validate_directory(self, root, extensions, exclude_dirs, exclude_files, language, additional_chars):
@@ -134,29 +145,5 @@ class TextIntegrityChar :
         #             lError += validate_file(szPath, specialFrenshChar, mode = 's')
 
         
-    def validate(self, roots, extensions, exclude_dirs, exclude_files, language='fr', additional_chars=''):
+  
         
-        self.get_list_valid_chars(language, additional_chars)
-
-        lExcludeDir = [os.path.join(rootDir, p) for p in exclude_dirs]
-        self.lErrors = []
-        nbErr = 0
-        for rootDir in roots:
-            root = Path(rootDir)
-            for root,dirs,files in os.walk(rootDir):
-                seeNextDir = False
-                for dir in lExcludeDir:
-                    if root.startswith(dir): 
-                        seeNextDir = True
-                if seeNextDir : 
-                    continue
-                for file in files:
-                    if '.' in file and file.split('.')[-1] in extensions and file not in exclude_files :
-                        szPath = os.path.join(root,file)
-                        self.validate_file(szPath, mode = 's')
-        if self.lErrors:
-            self.print_lError(lError)
-            self.print_speCar(lError)
-            exit(1)
-        
-        print("No bad characters found")
