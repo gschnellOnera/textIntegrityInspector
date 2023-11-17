@@ -1,7 +1,7 @@
 import argparse
 from textIntegrityInspector.validator import TextIntegrityChar
 
-def parse_arguments():
+def parse_arguments(args=None):
     parser = argparse.ArgumentParser(description="Text Integrity Inspector - Validate UTF-8 characters in specified language text files.")
 
     parser.add_argument("roots", nargs="*", default=["."], help="Root directories for analysis (default: current directory)")
@@ -11,10 +11,10 @@ def parse_arguments():
     parser.add_argument("--language", choices=["fr", "de", "en"], default=None, help="Language code for character validation (default: None)")
     parser.add_argument("--additional-chars", default="", help="Additional characters accepted in addition to the language-specific ones")
 
-    return parser.parse_args()
+    return parser.parse_args(args)
 
-def main():
-    args = parse_arguments()
+def main(args): 
+    
     textIntegrityChar = TextIntegrityChar()
     # Call the validator with the provided arguments
     for root in args.roots :
@@ -37,7 +37,7 @@ def main():
     #     additional_chars=args.additional_chars
     # )
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import sys
     sys.argv.append('.')
     sys.argv.append('--exclude-dirs') 
@@ -49,4 +49,4 @@ if __name__ == "__main__":
     
     
     #sys.argv.append('--exclude-dirs=.git')
-    main()
+    main(parse_arguments())
