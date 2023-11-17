@@ -5,7 +5,7 @@ import tempfile
 import pytest
 
 from textIntegrityInspector.validator import TextIntegrityChar
-from textIntegrityInspector.__main__ import main as mainTextIntegrityChar, parse_arguments
+from textIntegrityInspector.__main__ import main_args, parse_arguments
 
 @pytest.fixture(scope='function')
 def textIntegrityCharStub():
@@ -185,7 +185,7 @@ def test_is_valid_char_invalid_additional_chars():
     assert res
 
 def test_main():
-    mainTextIntegrityChar(parse_arguments([]))
+    main_args(parse_arguments([]))
     
 if __name__ == "__main__":
     import pytest

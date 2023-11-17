@@ -22,10 +22,14 @@ build:
   - pip install pipenv
   - pipenv install --dev
   - pipenv run pytest  --cov-report=xml:coverage.xml  --cov=textIntegrityInspector/  --junit-xml=junit.xml --cov-report term
+  - pipenv requirements > requirements.txt
+  - sed -i 's/==/>=/' requirements.txt
+  - pipenv run python setup.py bdist_wheel
   artifacts:
     paths: 
     - coverage.xml
     - junit.xml
+    - dist/*whl
     reports:
       junit: junit.xml
       coverage_report: 

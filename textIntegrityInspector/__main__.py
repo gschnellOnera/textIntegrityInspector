@@ -13,7 +13,7 @@ def parse_arguments(args=None):
 
     return parser.parse_args(args)
 
-def main(args): 
+def main_args(args): 
     
     textIntegrityChar = TextIntegrityChar()
     # Call the validator with the provided arguments
@@ -28,6 +28,8 @@ def main(args):
     textIntegrityChar.print_lErrors()
     textIntegrityChar.print_speCar()
 
+def main():  # pragma: no cover
+    main_args(parse_arguments())
     # validator.validate(
     #     roots=args.roots,
     #     extensions=args.extensions,
@@ -49,4 +51,4 @@ if __name__ == "__main__":  # pragma: no cover
     
     
     #sys.argv.append('--exclude-dirs=.git')
-    main(parse_arguments())
+    main()

@@ -11,6 +11,7 @@ argparse = "*"
 coverage = "*"
 pytest = "*"
 pytest-cov = "*"
+pbr = "*"
 # tox = "*"
 
 [requires]
