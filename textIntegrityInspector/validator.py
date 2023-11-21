@@ -1,7 +1,10 @@
 
 import sys
 import os
-from pathlib import Path
+
+import logging
+from fnmatch import fnmatch
+
 acuteAccentsLower="á, é, í, ó, ú"
 acuteAccentsUpper="Á, É, Í, Ó, Ú"
 graveAccentLower="à, è, ù"
@@ -12,7 +15,7 @@ diaeresisaLower="ä, ë, ï, ö, ü, ÿ"
 diaeresisaUppwer="Ä, Ë, Ï, Ö, Ü"
 cedilla="Ç, ç"
 ligatures="Œ, œ, Æ, æ"
-ponctunation=" …"
+ponctunation=" …’‘«»"
 math="²±μ"
 unit="°€"
 edition="§©"
@@ -24,7 +27,34 @@ defaultSpecialFrenshChar = (acuteAccentsLower + acuteAccentsUpper
     + cedilla + ligatures + ponctunation 
     + math + unit + edition).replace(",","").replace(" ","")
 
+def get_max_filename_length():
+    import os
+    import platform
+    import subprocess
+    import logging
+    import ctypes
+    max_length = -1
+    try:
+        system = platform.system()
+        if system == 'Windows':
+            max_length = int(subprocess.check_output("getconf NAME_MAX /", shell=True))
+            #max_length = os.path.getconf('PC_NAME_MAX')
+        elif system == 'Darwin':
+            max_length = os.pathconf('/', 'PC_NAME_MAX')
+        else:
+            libc = ctypes.CDLL('libc.so.6')
+            max_length = libc.fpathconf('/', 261)
+    except Exception as e:
+        logging.exception("get_max_filename_length_other")
+        pass
+    if max_length == -1 : max_length = float('inf')
+    return max_length
+
+
+
 class TextIntegrityChar :
+
+    FILE_MAX_NAME = get_max_filename_length()
 
     def __init__(self):
         self.numCol = 0
@@ -61,23 +91,28 @@ class TextIntegrityChar :
                 isValide = self.appendListErrors()
                 self.notAscii = b''
         return isValide
-
+    
     def validate_file(self, myfile , mode='v'):
         self.notAscii = b''
         self.numLine = 1
         self.numCol = 0
-        self.lErrors = []
         self.currentFile = myfile
-        with open(myfile, "rb") as f:
-            while (byte := f.read(1)):
-                if byte == b'\n' : 
-                    self.numLine += 1
-                    self.numCol = 0
-                else :
-                    self.numCol += 1
-                self.is_valid_char(byte)
-        if mode == "v" and self.lErrors:
-            self.print_lErrors()
+        try :
+            with open(myfile, "rb") as f:
+                while (byte := f.read(1)):
+                    if byte == b'\n' : 
+                        self.numLine += 1
+                        self.numCol = 0
+                    else :
+                        self.numCol += 1
+                    self.is_valid_char(byte)
+            if mode == "v" and self.lErrors:
+                self.print_lErrors()
+        except Exception as e:
+            if len(myfile) >= self.FILE_MAX_NAME :
+                logging.warning(f'The file "{myfile}" has exceeded the maximum character limit allowed by the system.')
+            else :
+                logging.exception(f"Erreur on open file {myfile} for read")
 
     def appendListErrors(self):
         error = {}
@@ -119,31 +154,26 @@ class TextIntegrityChar :
             self.spetialChars += defaultSpecialFrenshChar
         #TODO uniq
         return self.spetialChars
+    
+    
+    @staticmethod
+    def exclude_directory(path, exclude_patterns):
+        for pattern in exclude_patterns:
+            if fnmatch(path, pattern) or fnmatch(os.path.basename(path), pattern):
+                return True
+        return False
 
     def validate_directory(self, root, extensions, exclude_dirs, exclude_files, language, additional_chars):
         self.get_list_valid_chars(language, additional_chars)
         for foldername, subfolders, filenames in os.walk(root):
+            logging.info(f"Analyzing directory: {foldername}")
             # Exclure les répertoires spécifiés
-            subfolders[:] = [folder for folder in subfolders if folder not in exclude_dirs]
+            subfolders[:] = [folder for folder in subfolders if not TextIntegrityChar.exclude_directory(os.path.join(foldername, folder), exclude_dirs)]
             for filename in filenames:
                 file_path = os.path.join(foldername, filename)
 
                 # Exclure les fichiers spécifiés
-                if file_path not in exclude_files and filename.split('.')[-1] in extensions:
+                if file_path not in exclude_files and (not extensions or  filename.split('.')[-1] in extensions):
                     self.validate_file(file_path)
-        # root = Path(rootDir)
-        # for root,dirs,files in os.walk(rootDir):
-        #     seeNextDir = False
-        #     for dir in lExcludeDir:
-        #         if root.startswith(dir): 
-        #             seeNextDir = True
-        #     if seeNextDir : 
-        #         continue
-        #     for file in files:
-        #         if '.' in file and file.split('.')[-1] in extensions and file not in exclude_files :
-        #             szPath = os.path.join(root,file)
-        #             lError += validate_file(szPath, specialFrenshChar, mode = 's')
 
-        
-  
         

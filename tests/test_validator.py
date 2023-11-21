@@ -36,6 +36,7 @@ def root():
     |   |   +--- autres2
     |   |   |   +--- notfrenshFile.txt
     |   |   |   +--- notutf8.dumy
+    |   |   |   +--- BOM.dumy
     |   +--- included_dir
     |   |   +--- autres
     |   |   |   +--- frenshFile.txt
@@ -49,6 +50,7 @@ def root():
         os.makedirs(excluded_dir)
         createFileUTF_8(dir=excluded_dir, name='notfrenshFile.txt', text="Ceci est un texte non-valide en français.\nnontenant de caractère ¤ à la \n 24 colone de la ligne 2.")
         createFilebin(dir=excluded_dir, name='notutf8.dumy', text=b'ab\x01c\xf5\xde\x02\xee\x01\x02\xf3\x01\x02\03f' + "¿�𝄞𠀀".encode())
+        createFilebin(dir=excluded_dir, name='BOM.dumy', text='Ceci est un utf-8-sig file\n'.encode('utf-8-sig'))
         yield root
         pass # automatic remove root directory
 
@@ -62,13 +64,44 @@ def test_validate_directory_valid(root):
         textIntegrityChar.print_speCar()
 
 
+def test_exclude_directoryDoubleAsterix(root):
+
+        textIntegrityChar = TextIntegrityChar()
+        # Valide le fichier avec la langue spécifiée
+        textIntegrityChar.validate_directory(root, extensions=['txt'], exclude_dirs=[os.path.join('**','excluded_dir')], exclude_files=[], language='fr', additional_chars='')
+        assert len(textIntegrityChar.lErrors) == 0
+
+def test_exclude_directoryOneAsterix(root):
+
+        textIntegrityChar = TextIntegrityChar()
+        # Valide le fichier avec la langue spécifiée
+        textIntegrityChar.validate_directory(root, extensions=['txt'], exclude_dirs=[os.path.join(root, 'insert', 'excluded_dir', '*')], exclude_files=[], language='fr', additional_chars='')
+        assert len(textIntegrityChar.lErrors) == 0
+
+def test_exclude_directory(root):
+
+        textIntegrityChar = TextIntegrityChar()
+        # Valide le fichier avec la langue spécifiée
+        textIntegrityChar.validate_directory(root, extensions=['txt'], exclude_dirs=[os.path.join(root, 'insert', 'excluded_dir')], exclude_files=[], language='fr', additional_chars='')
+        assert len(textIntegrityChar.lErrors) == 0
+
+def test_exclude_directory_2(root):
+
+        textIntegrityChar = TextIntegrityChar()
+        # Valide le fichier avec la langue spécifiée
+        textIntegrityChar.validate_directory(root, extensions=['txt'], exclude_dirs=[os.path.join(root, 'insert', 'excluded_dirAppend')], exclude_files=[], language='fr', additional_chars='')
+        assert len(textIntegrityChar.lErrors) == 1
+        textIntegrityChar = TextIntegrityChar()
+        # Valide le fichier avec la langue spécifiée
+        textIntegrityChar.validate_directory(root, extensions=['txt'], exclude_dirs=[os.path.join(root, 'insert', 'excluded')], exclude_files=[], language='fr', additional_chars='')
+        assert len(textIntegrityChar.lErrors) == 1
+
 def test_validate_directory_invalid_language(root):
 
         textIntegrityChar = TextIntegrityChar()
         # Valide le fichier avec la langue spécifiée
         textIntegrityChar.validate_directory(os.path.join(root, 'insert', 'excluded_dir'), extensions=['txt'], exclude_dirs=[], exclude_files=[], language='fr', additional_chars='')
         assert len(textIntegrityChar.lErrors) == 1
-        #'file': self.currentFile, 'line' : self.numLine, 'col': self.numCol, 'carBin': self.notAscii
         assert textIntegrityChar.lErrors[0]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notfrenshFile.txt')
         assert textIntegrityChar.lErrors[0]['line'] == 2
         assert textIntegrityChar.lErrors[0]['col'] == 24
@@ -79,52 +112,87 @@ def test_validate_directory_noUTF_8(root):
 
         textIntegrityChar = TextIntegrityChar()
         # Valide le fichier avec la langue spécifiée
-        textIntegrityChar.validate_directory(os.path.join(root, 'insert', 'excluded_dir'), extensions=['dumy'], exclude_dirs=[], exclude_files=[], language='fr', additional_chars='')
-        assert len(textIntegrityChar.lErrors) == 9
-        #'file': self.currentFile, 'line' : self.numLine, 'col': self.numCol, 'carBin': self.notAscii
-        for i in range(len(textIntegrityChar.lErrors)) :
-            assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
-            assert textIntegrityChar.lErrors[i]['line'] == 1
-        assert textIntegrityChar.lErrors[0]['errorType'] == 'NotInLanguage'
-        assert textIntegrityChar.lErrors[0]['col'] == 3
-        assert textIntegrityChar.lErrors[0]['carBin'] == b'\x01'
-        assert textIntegrityChar.lErrors[0]['utf-8'] == b'\x01'.decode()
-
-        assert textIntegrityChar.lErrors[1]['errorType'] == 'NotUtf-8'
-        assert textIntegrityChar.lErrors[1]['col'] == 5
-        assert textIntegrityChar.lErrors[1]['carBin'] == b'\xf5'
-
-        assert textIntegrityChar.lErrors[2]['errorType'] == 'NotUtf-8'
-        assert textIntegrityChar.lErrors[2]['col'] == 6
-        assert textIntegrityChar.lErrors[2]['carBin'] == b'\xde\x02'
-
-        assert textIntegrityChar.lErrors[3]['errorType'] == 'NotUtf-8'
-        assert textIntegrityChar.lErrors[3]['col'] == 7
-        assert textIntegrityChar.lErrors[3]['carBin'] == b'\xee\x01\x02'
-
-        assert textIntegrityChar.lErrors[4]['errorType'] == 'NotUtf-8'
-        assert textIntegrityChar.lErrors[4]['col'] == 8
-        assert textIntegrityChar.lErrors[4]['carBin'] == b'\xf3\x01\x02\03'
-
-        assert textIntegrityChar.lErrors[5]['errorType'] == 'NotInLanguage'
-        assert textIntegrityChar.lErrors[5]['col'] == 10
-        assert textIntegrityChar.lErrors[5]['carBin'] == '¿'.encode()
-        assert textIntegrityChar.lErrors[5]['utf-8'] == '¿'
-
-        assert textIntegrityChar.lErrors[6]['errorType'] == 'NotInLanguage'
-        assert textIntegrityChar.lErrors[6]['col'] == 11
-        assert textIntegrityChar.lErrors[6]['carBin'] == '�'.encode()
-        assert textIntegrityChar.lErrors[6]['utf-8'] == '�'
-
-        assert textIntegrityChar.lErrors[7]['errorType'] == 'NotInLanguage'
-        assert textIntegrityChar.lErrors[7]['col'] == 12
-        assert textIntegrityChar.lErrors[7]['carBin'] == '𝄞'.encode()
-        assert textIntegrityChar.lErrors[7]['utf-8'] == '𝄞'
-
-        assert textIntegrityChar.lErrors[8]['errorType'] == 'NotInLanguage'
-        assert textIntegrityChar.lErrors[8]['col'] == 13
-        assert textIntegrityChar.lErrors[8]['carBin'] == '𠀀'.encode()
-        assert textIntegrityChar.lErrors[8]['utf-8'] == '𠀀'
+        textIntegrityChar.validate_directory(os.path.join(root, 'insert', 'excluded_dir'), extensions=[], exclude_dirs=[], exclude_files=[], language='fr', additional_chars='')
+        assert len(textIntegrityChar.lErrors) == 11
+        
+        #0
+        i= 0
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'BOM.dumy')
+        assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[i]['col'] == 1
+        assert textIntegrityChar.lErrors[i]['carBin'] == b'\xef\xbb\xbf'
+        assert textIntegrityChar.lErrors[i]['utf-8'] == b'\xef\xbb\xbf'.decode()
+        #1
+        i+=1 
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notfrenshFile.txt')
+        assert textIntegrityChar.lErrors[i]['line'] == 2
+        assert textIntegrityChar.lErrors[i]['col'] == 24
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[i]['carBin'] == b'\xc2\xa4'
+        assert textIntegrityChar.lErrors[i]['utf-8'] == '¤'
+        #2
+        i+=1 
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+        assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[i]['col'] == 3
+        assert textIntegrityChar.lErrors[i]['carBin'] == b'\x01'
+        #3
+        i+=1
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+        assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[i]['col'] == 5
+        assert textIntegrityChar.lErrors[i]['carBin'] == b'\xf5'
+        #4
+        i+=1
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+        assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[i]['col'] == 6
+        assert textIntegrityChar.lErrors[i]['carBin'] == b'\xde\x02'
+        #5
+        i+=1
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+        assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[i]['col'] == 7
+        assert textIntegrityChar.lErrors[i]['carBin'] == b'\xee\x01\x02'
+        #6
+        i+=1
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+        assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotUtf-8'
+        assert textIntegrityChar.lErrors[i]['col'] == 8
+        assert textIntegrityChar.lErrors[i]['carBin'] == b'\xf3\x01\x02\03'
+        #7
+        i+=1
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+        assert textIntegrityChar.lErrors[i]['line'] == 1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[i]['col'] == 10
+        assert textIntegrityChar.lErrors[i]['carBin'] == '¿'.encode()
+        assert textIntegrityChar.lErrors[i]['utf-8'] == '¿'
+        #8
+        i+=1
+        assert textIntegrityChar.lErrors[i]['file'] == os.path.join(root, 'insert', 'excluded_dir', 'autres2', 'notutf8.dumy')
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[i]['col'] == 11
+        assert textIntegrityChar.lErrors[i]['carBin'] == '�'.encode()
+        assert textIntegrityChar.lErrors[i]['utf-8'] == '�'
+        #9
+        i+=1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[i]['col'] == 12
+        assert textIntegrityChar.lErrors[i]['carBin'] == '𝄞'.encode()
+        assert textIntegrityChar.lErrors[i]['utf-8'] == '𝄞'
+        #10
+        i+=1
+        assert textIntegrityChar.lErrors[i]['errorType'] == 'NotInLanguage'
+        assert textIntegrityChar.lErrors[i]['col'] == 13
+        assert textIntegrityChar.lErrors[i]['carBin'] == '𠀀'.encode()
+        assert textIntegrityChar.lErrors[i]['utf-8'] == '𠀀'
         textIntegrityChar.print_lErrors()
         textIntegrityChar.print_speCar()
 

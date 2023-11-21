@@ -16,7 +16,7 @@
             "autoReload": {
               "enable": true
             }
-        }
+        },
         {
             "name": "Python: Debug Tests",
             "type": "python",
