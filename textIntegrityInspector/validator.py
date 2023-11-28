@@ -107,7 +107,7 @@ class TextIntegrityChar :
                         self.numCol += 1
                     self.is_valid_char(byte)
             if mode == "v" and self.lErrors:
-                self.print_lErrors()
+                self.print_lErrors(myfile)
         except Exception as e:
             if len(myfile) >= self.FILE_MAX_NAME :
                 logging.warning(f'The file "{myfile}" has exceeded the maximum character limit allowed by the system.')
@@ -128,14 +128,15 @@ class TextIntegrityChar :
             return False
         return True
 
-    def print_lErrors(self):
+    def print_lErrors(self, fileName = None):
         for error in self.lErrors:
-            if error['errorType'] == 'NotInLanguage':
-                print(f"{error['utf-8']}: {error['file']}: ({error['line']},{error['col']}), le caractère {error['utf-8']} n'est pas reconnue comme un caractère affichable en français!")
-            elif error['errorType'] == 'NotUtf-8':
-                print(f"{error['carBin']}: {error['file']} ({error['line']},{error['col']}): le caractère {error['carBin']}  n'est pas en utf-8!")
-            else:
-                print(error)
+            if not fileName or  error['file'] == fileName :
+                if error['errorType'] == 'NotInLanguage':
+                    print(f"{error['utf-8']}: {error['file']}: ({error['line']},{error['col']}), le caractère {error['utf-8']} n'est pas reconnue comme un caractère affichable en français!")
+                elif error['errorType'] == 'NotUtf-8':
+                    print(f"{error['carBin']}: {error['file']} ({error['line']},{error['col']}): le caractère {error['carBin']}  n'est pas en utf-8!")
+                else:
+                    print(error)
         if not self.lErrors:
             print("No bad characters found")
 

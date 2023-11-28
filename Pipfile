@@ -6,12 +6,14 @@ name = "pypi"
 [packages]
 
 argparse = "*"
+PyYAML = "*"
+toml = "*"
+pbr = "*"
 
 [dev-packages]
 coverage = "*"
 pytest = "*"
 pytest-cov = "*"
-pbr = "*"
 # tox = "*"
 
 [requires]

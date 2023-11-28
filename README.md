@@ -2,7 +2,27 @@
 
 The Text Integrity Inspector package provides a tool for validating the integrity of UTF-8 text files based on language-specific character sets.
 
+## Tnstallation
+
+```bash
+pip install textIntegrityInspector
+```
+
 ## Usage
+
+### In Commande line
+
+```bash
+textIntegrityInspector path_to_inspect_dir --extensions py txt 
+
+# usage 
+textIntegrityInspector --help
+
+```
+
+This will validate all files in the current directory with the `.py` or `.txt` extension.
+
+### In python script
 
 ```python
 from textIntegrityInspector.validator import TextIntegrityChar
@@ -20,58 +40,54 @@ validator.validate_directory(
 
 This will validate all files in the current directory with the `.py` extension.
 
-## MainFunctions
+### Configuration
 
-* `validate_file(file_path, mode='v')`: Validates the characters in a file against the language-specific character set.
-* `is_valid_char(byte)`: Determines whether a given byte represents a valid character within the specified language-specific character set.
-* `appendListErrors()`: Appends error messages to the `lErrors` list.
-* `print_lErrors()`: Prints out the error messages from the `lErrors` list.
-* `get_list_valid_chars(language, additional_chars)`: Returns a list of valid characters for the given language.
-* `validate_directory(root, extensions, exclude_dirs, exclude_files, language, additional_chars)`: Validates all files in a directory and its subdirectories.
+By default, `textIntegrityInspector` looks for the configuration file `.textIntegrityInspector.yaml` in the current directory. The file format is as follows.
 
-## Examples
+YAML format
 
-**Validate all files in the current directory with the `.py` extension:**
+```yaml
+roots:
+  - dir1
+  - dir2
+extensions:
+  - txt
+  - md
+exclude-dirs:
+  - tests
+  - '**/temp*'
+exclude-files:
+  - example.txt
+language: fr
+additional-chars: 'ü,ö,ß'
+verbose: true
 
-```python
-from textIntegrityInspector.validator import TextIntegrityChar
-
-validator = TextIntegrityChar()
-validator.validate_directory(
-    root=".",
-    extensions=["py"],
-    exclude_dirs=[],
-    exclude_files=[],
-    language="en",
-    additional_chars="",
-)
 ```
 
-**Validate a file with a specific language:**
+It is possible to specify a different configuration file with the --config-file option. The TOML format is also supported.
 
-```python
-from textIntegrityInspector.validator import TextIntegrityChar
+TOML format
 
-validator = TextIntegrityChar()
-validator.validate_file(file_path="my_file.fr", language="fr")
+```toml
+roots = ["dir1", "dir2"]
+extensions = ["txt", "md"]
+exclude-dirs = ["tests", "**/temp*"]
+exclude-files = ["example.txt"]
+language = "fr"
+additional-chars = "ü,ö,ß"
+verbose = true
 ```
 
-**Validate a file with additional characters:**
+**Warning:** The paths passed as arguments replace the `roots` list in the configuration file, while the other options are combined.
 
-```python
-from textIntegrityInspector.validator import TextIntegrityChar
 
-validator = TextIntegrityChar()
-validator.validate_file(
-    file_path="my_file.py",
-    language="en",
-    additional_chars="é, ê, ô",
-)
+## Docker
+
+### Usage
+
+```bash
+docker run -it -v path_to_inspect_dir:/data textIntegrityInspector --extensions py txt 
 ```
-
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
 ## Contributing
 
@@ -79,4 +95,4 @@ Contributions are welcome! Please open a pull request or issue if you have any f
 
 ## License
 
-The Text Integrity Inspector package is licensed under the MIT License.
+The Text Integrity Inspector package is licensed under the [MIT License](LICENSE).

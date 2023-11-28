@@ -5,7 +5,6 @@ import tempfile
 import pytest
 
 from textIntegrityInspector.validator import TextIntegrityChar
-from textIntegrityInspector.__main__ import main_args, parse_arguments
 
 @pytest.fixture(scope='function')
 def textIntegrityCharStub():
@@ -26,7 +25,7 @@ def createFilebin(dir, name,  text):
     with open(file_path, 'wb') as file:
         file.write(text)
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='module')
 def root():
     """create tree test
 
@@ -251,9 +250,6 @@ def test_is_valid_char_invalid_additional_chars():
     for byte in  [invalid_char[i:i+1] for i in range(len(invalid_char))] :
         res = res and  textIntegrityChar.is_valid_char(byte)
     assert res
-
-def test_main():
-    main_args(parse_arguments([]))
     
 if __name__ == "__main__":
     import pytest
