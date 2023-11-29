@@ -1,5 +1,6 @@
 # Text Integrity Inspector
-
+![coverage](https://gitlab-dsfm.onecert.fr/gschnell/textintegrityinspector/badges/develop/coverage.svg?job=build)  
+![Text Integrity Inspector](./doc/images/TextIntegrityLogo180.png)  
 The Text Integrity Inspector package provides a tool for validating the integrity of UTF-8 text files based on language-specific character sets.
 
 ## Tnstallation
@@ -78,7 +79,8 @@ additional-chars = "ü,ö,ß"
 verbose = true
 ```
 
-**Warning:** The paths passed as arguments replace the `roots` list in the configuration file, while the other options are combined.
+> [!IMPORTANT]
+> The paths passed as arguments replace the `roots` list in the configuration file, while the other options are combined.
 
 
 ## Docker
@@ -88,6 +90,10 @@ verbose = true
 ```bash
 docker run -it -v path_to_inspect_dir:/data textIntegrityInspector --extensions py txt 
 ```
+
+## Gitlab-ci integration
+
+![GitLab CI](https://img.shields.io/badge/gitlab%20ci-%23181717.svg?style=for-the-badge&logo=gitlab&logoColor=white)
 
 ## Contributing
 
