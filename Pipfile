@@ -11,6 +11,7 @@ toml = "*"
 pbr = "*"
 
 [dev-packages]
+pipenv = "*"
 coverage = "*"
 pytest = "*"
 pytest-cov = "*"
