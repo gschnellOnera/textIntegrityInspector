@@ -4,17 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-
 argparse = "*"
 PyYAML = "*"
 toml = "*"
 pbr = "*"
+testintegrityinspector = {file = "."}
 
 [dev-packages]
 pipenv = "*"
 coverage = "*"
 pytest = "*"
 pytest-cov = "*"
+build = "*"
 # tox = "*"
 
 [requires]

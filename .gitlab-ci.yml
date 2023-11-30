@@ -1,6 +1,4 @@
-# This file is a template, and might need editing before it works on your project.
-# Official framework image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/python
+# image python:3.8 for have python and git
 image: python:3.8
 
 # This folder is cached between builds
@@ -18,20 +16,18 @@ build:
   tags:
   - docker_linux
   script:
-  - ls -al
-  - git status
   - python -V                                   # Print out python version for debugging
   - pip install pipenv
   - pipenv install --dev
   - pipenv run pytest  --cov-report=xml:coverage.xml  --cov=textIntegrityInspector/  --junit-xml=junit.xml --cov-report term
   - pipenv requirements > requirements.txt
   - sed -i 's/==/>=/' requirements.txt
-  - pipenv run python setup.py bdist_wheel
+  - pipenv run python -m build
   artifacts:
     paths: 
     - coverage.xml
     - junit.xml
-    - dist/*whl
+    - dist/*
     reports:
       junit: junit.xml
       coverage_report: 
