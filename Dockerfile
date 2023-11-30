@@ -11,4 +11,7 @@ RUN  --mount=type=bind,target=/tmp \
 
 WORKDIR /data
 
-CMD [ python -m textIntegrityInspector ]
+ENTRYPOINT [ "python", "-m", "textIntegrityInspector" ]
+
+ARG CI_COMMIT_SHA=""
+LABEL commit_sha1="${CI_COMMIT_SHA}"

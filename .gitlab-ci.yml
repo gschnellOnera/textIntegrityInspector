@@ -34,3 +34,17 @@ build:
         coverage_format: cobertura
         path: coverage.xml
   coverage: '/TOTAL.*\s([.\d]+)%/'
+
+  
+Docker images:
+  stage: build
+  #stage: BuildDocker
+  image: docker:20.10.17-cli-alpine3.16
+  tags:
+  - docker_linux
+  - docker_build
+  script:
+  - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWD
+  - BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS_DEFAULT} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA}"
+  - docker build ${BUILD_OPTIONS} -t ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG} .
+  - if [ -z ${DOCKER_REGISTRY+x} ]; then docker push  ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG}; fi
