@@ -10,8 +10,8 @@ RUN  --mount=type=bind,target=/tmp \
     pipenv install --deploy --verbose --system && \
     pipenv --clear
 
-RUN  --mount=type=bind,target=/local_dir \
-    cd /local_dir && pip install  --no-cache-dir  dist/textIntegrityInspector-*.whl
+RUN  --mount=type=bind,target=/tmp \
+    cd /tmp && pip install  --no-cache-dir  dist/textIntegrityInspector-*.whl
 
 WORKDIR /data
 
