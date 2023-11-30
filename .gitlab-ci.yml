@@ -38,6 +38,10 @@ build:
   
 Docker images:
   stage: build
+  needs: 
+  - build
+  dependencies: 
+  - build
   #stage: BuildDocker
   image: docker:20.10.17-cli-alpine3.16
   tags:
