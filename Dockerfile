@@ -2,12 +2,16 @@ FROM python:3.8-slim
 
 RUN mkdir /data
 
-RUN pip install  --no-cache-dir --upgrade pip pipenv
-
 RUN  --mount=type=bind,target=/tmp \
     cd /tmp && \
-    pipenv install --dev --deploy --verbose --system && \
-    pipenv --clear
+    pip install  --no-cache-dir  .
+
+# RUN pip install  --no-cache-dir --upgrade pip pipenv
+# 
+# RUN  --mount=type=bind,target=/tmp \
+#     cd /tmp && \
+#     pipenv install --dev --deploy --verbose --system && \
+#     pipenv --clear
 
 WORKDIR /data
 
