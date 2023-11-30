@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8e3c236cb8af2c5283ffcb5b2d82a69c6ccfc4e881a95865211c78ed946c366d"
+            "sha256": "b2ae4a0c2b32f72e32cafc383839cc180acd185145a024de8271af9be7484237"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -88,9 +88,6 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==6.0.1"
-        },
-        "testintegrityinspector": {
-            "file": "."
         },
         "toml": {
             "hashes": [

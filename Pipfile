@@ -8,7 +8,6 @@ argparse = "*"
 PyYAML = "*"
 toml = "*"
 pbr = "*"
-testintegrityinspector = {file = "."}
 
 [dev-packages]
 pipenv = "*"
