@@ -18,6 +18,8 @@ build:
   tags:
   - docker_linux
   script:
+  - ls -al
+  - git status
   - python -V                                   # Print out python version for debugging
   - pip install pipenv
   - pipenv install --dev
