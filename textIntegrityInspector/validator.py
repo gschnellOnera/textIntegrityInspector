@@ -4,28 +4,93 @@ import os
 
 import logging
 from fnmatch import fnmatch
+# Elementary data dictionary
+elementaryData = {
+    'acuteAccentsLower': "á, é, í, ó, ú",
+    'acuteAccentsUpper': "Á, É, Í, Ó, Ú",
+    'graveAccentLower': "à, è, ù",
+    'graveAccentUpper': "À, È, Ù",
+    'circumflexAccentsLower': "â, ê, î, ô, û",
+    'circumflexAccentsUpper': "Â, Ê, Î, Ô, Û",
+    'diaeresisLower': "ä, ë, ï, ö, ü, ÿ",
+    'diaeresisUpper': "Ä, Ë, Ï, Ö, Ü",
+    'cedilla': "Ç, ç",
+    'ligatures': "Œ, œ, Æ, æ",
+    'punctuation': " …’‘«»",
+    'math': "²±μ",
+    'unit': "°€",
+    'edition': "§©",
+    'eszett': "ß",  # German character
+    'tildes': "ñ, Ñ, á, é, í, ó, ú, Á, É, Í, Ó, Ú"  # Spanish characters with tildes
+}
 
-acuteAccentsLower="á, é, í, ó, ú"
-acuteAccentsUpper="Á, É, Í, Ó, Ú"
-graveAccentLower="à, è, ù"
-graveAccentUpper="À, È, Ù"
-circumflexAccentsLower="â, ê, î, ô, û"
-circumflexAccentssUpper="Â, Ê, Î, Ô, Û"
-diaeresisaLower="ä, ë, ï, ö, ü, ÿ"
-diaeresisaUppwer="Ä, Ë, Ï, Ö, Ü"
-cedilla="Ç, ç"
-ligatures="Œ, œ, Æ, æ"
-ponctunation=" …’‘«»"
-math="²±μ"
-unit="°€"
-edition="§©"
-#"éçàèùêâêîûüôëïá°²ÉÊÈÀÇ§µ©œŒÆæÔÓ±μ …"
-defaultSpecialFrenshChar = (acuteAccentsLower + acuteAccentsUpper 
-    + graveAccentLower + graveAccentUpper 
-    + circumflexAccentsLower + circumflexAccentssUpper 
-    + diaeresisaLower + diaeresisaUppwer 
-    + cedilla + ligatures + ponctunation 
-    + math + unit + edition).replace(",","").replace(" ","")
+# Language-specific data dictionary
+languageData = {
+    'fr': [
+        'acuteAccentsLower',
+        'acuteAccentsUpper',
+        'graveAccentLower',
+        'graveAccentUpper',
+        'circumflexAccentsLower',
+        'circumflexAccentsUpper',
+        'diaeresisLower',
+        'diaeresisUpper',
+        'cedilla',
+        'ligatures',
+        'punctuation',
+        'math',
+        'unit',
+        'edition'
+    ],
+    'en': [
+        'punctuation',
+        'math',
+        'unit',
+        'edition'
+    ],
+    'de': [
+        'acuteAccentsLower',
+        'acuteAccentsUpper',
+        'diaeresisLower',
+        'diaeresisUpper',
+        'ligatures',
+        'punctuation',
+        'math',
+        'unit',
+        'edition'
+    ],
+    'es': [
+        'acuteAccentsLower',
+        'acuteAccentsUpper',
+        'diaeresisLower',
+        'diaeresisUpper',
+        'ligatures',
+        'punctuation',
+        'math',
+        'unit',
+        'edition'
+    ],
+    'it': [
+        'acuteAccentsLower',
+        'acuteAccentsUpper',
+        'graveAccentLower',
+        'graveAccentUpper',
+        'circumflexAccentsLower',
+        'circumflexAccentsUpper',
+        'diaeresisLower',
+        'diaeresisUpper',
+        'punctuation',
+        'math',
+        'unit',
+        'edition'
+    ]
+}
+
+
+def get_special_characters(language):
+    specific_chars = languageData.get(language, [])
+    return ''.join(elementaryData[key] for key in specific_chars).replace(",", "").replace(" ", "")
+
 
 def get_max_filename_length():
     import os
@@ -64,7 +129,8 @@ class TextIntegrityChar :
         self.spetialChars = ""
         self.currentFile = ""
         self.lenNotAsciiRequire = 0
-        
+
+
     def is_valid_char(self, byte):
                 
         isValide = True
@@ -132,13 +198,13 @@ class TextIntegrityChar :
         for error in self.lErrors:
             if not fileName or  error['file'] == fileName :
                 if error['errorType'] == 'NotInLanguage':
-                    print(f"{error['utf-8']}: {error['file']}: ({error['line']},{error['col']}), le caractère {error['utf-8']} n'est pas reconnue comme un caractère affichable en français!")
+                    print(f"{error['utf-8']}: {error['file']} ({error['line']},{error['col']}), the character {error['utf-8']} is not recognized as a printable character in your language!")
                 elif error['errorType'] == 'NotUtf-8':
-                    print(f"{error['carBin']}: {error['file']} ({error['line']},{error['col']}): le caractère {error['carBin']}  n'est pas en utf-8!")
+                    print(f"{error['carBin']}: {error['file']} ({error['line']},{error['col']}): the character {error['carBin']} is not in UTF-8 encoding!")
                 else:
                     print(error)
         if not self.lErrors:
-            print("No bad characters found")
+            print("No non-printable characters were found. Your files are UTF-8 compliant.")
 
     def print_speCar(self):
         lCar = set()
@@ -151,10 +217,10 @@ class TextIntegrityChar :
     def get_list_valid_chars(self, language, additional_chars):
 
         self.spetialChars = additional_chars
-        if language == 'fr':
-            self.spetialChars += defaultSpecialFrenshChar
+        if language in set(languageData.keys()):
+            self.spetialChars += get_special_characters(language)
         #TODO uniq
-        return self.spetialChars
+        return set(self.spetialChars)
     
     
     @staticmethod
@@ -176,5 +242,12 @@ class TextIntegrityChar :
                 # Exclure les fichiers spécifiés
                 if file_path not in exclude_files and (not extensions or  filename.split('.')[-1] in extensions):
                     self.validate_file(file_path)
+                    
+    def display_languages(self):
+        print("Supported Languages and Accepted Characters:")
+        for language, chars in languageData.items():
+            accepted_chars = ', '.join(chars)
+            print(f"\nLanguage: {language}\nAccepted Characters: {accepted_chars}")
+
 
         

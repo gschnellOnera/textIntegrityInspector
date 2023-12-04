@@ -15,6 +15,7 @@ coverage = "*"
 pytest = "*"
 pytest-cov = "*"
 build = "*"
+twine = "*"
 # tox = "*"
 
 [requires]

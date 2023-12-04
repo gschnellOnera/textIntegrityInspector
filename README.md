@@ -77,6 +77,7 @@ exclude-files = ["example.txt"]
 language = "fr"
 additional-chars = "ü,ö,ß"
 verbose = true
+silence = false
 ```
 
 > [!IMPORTANT]
@@ -88,7 +89,7 @@ verbose = true
 ### Usage
 
 ```bash
-docker run -it -v path_to_inspect_dir:/data textIntegrityInspector --extensions py txt 
+docker run -it -v path_to_inspect_dir:/data text_integrity_inspector --extensions py txt 
 ```
 
 ## Gitlab-ci integration
