@@ -10,6 +10,7 @@ cache:
 
 stages:
 - build
+- deploy
 
 build:
   stage: build
@@ -52,3 +53,27 @@ Docker images:
   - BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS_DEFAULT} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA}"
   - docker build ${BUILD_OPTIONS} -t ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG} .
   - if [ ! -z ${DOCKER_REGISTRY+x} ]; then docker push  ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG}; fi
+
+deploy_wheels:
+  stage: deploy
+  needs:
+  - build
+  dependencies: 
+  - build
+  tags:
+  - docker_linux
+  script:
+  # Push Python wheels
+  - pip install twine
+  - if [ ! -z ${RUNNER_CERT_CA_PATH+x} ]; then export export TWINE_CERT=${RUNNER_CERT_CA_PATH}; fi
+  - cd dist 
+  - ls
+  - for file in $(ls); do twine upload -u $PYPI_USER -p $PYPI_PASSWD  --repository-url ${PYPI_SERVER}/ ${file}; done
+  - ls *
+  - echo $0 || true
+  - ls testIntegrityInspector*.whl || true
+  - echo "twine upload -u $PYPI_USER -p $PYPI_PASSWD --repository-url ${PYPI_SERVER}/ testIntegrityInspector*.whl" || true
+  - twine upload -u $PYPI_USER -p $PYPI_PASSWD  --repository-url ${PYPI_SERVER}/ testIntegrityInspector*.whl || true
+  only:
+  - /^main$/
+  - /^develop$/
