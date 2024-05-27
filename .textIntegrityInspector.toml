@@ -1,0 +1,8 @@
+roots = ["."]
+extensions = ["txt", "py", "cfg", "md", "xml"]
+exclude-dirs = [".git", ".venv", "build"]
+exclude-files = ["tests/test_validator.py", "textIntegrityInspector/languageData.py" ]
+language = "fr"
+additional-chars = "ü,ö,ß"
+verbose = true
+silence = false
