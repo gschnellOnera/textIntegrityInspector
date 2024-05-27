@@ -64,7 +64,8 @@ check-utf-8:
     name: ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG}
     entrypoint: [""]
   stage: test
-  needs: []
+  needs: 
+  - Docker images
   tags:
   - docker_linux
   script:
@@ -90,6 +91,25 @@ deploy_wheels:
   - ls testIntegrityInspector*.whl || true
   - echo "twine upload -u $PYPI_USER -p $PYPI_PASSWD --repository-url ${PYPI_SERVER}/ testIntegrityInspector*.whl" || true
   - twine upload -u $PYPI_USER -p $PYPI_PASSWD  --repository-url ${PYPI_SERVER}/ testIntegrityInspector*.whl || true
-  only:
-  - /^main$/
-  - /^develop$/
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == /^develop$/
+
+    
+deploy_docker:
+  needs: 
+  - Docker images
+  #stage: BuildDocker
+  image: docker:20.10.17-cli-alpine3.16
+  tags:
+  - docker_linux
+  - docker_build
+  script:
+  - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWD
+  - BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS_DEFAULT} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA}"
+  - docker pull ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG} 
+  - docker tag ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG} ${DOCKER_REGISTRY}text_integrity_inspector:latest
+  - if [ ! -z ${DOCKER_REGISTRY+x} ]; then docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASSWD} ${DOCKER_REGISTRY}; fi
+  - if [ ! -z ${DOCKER_REGISTRY+x} ]; then docker push  ${DOCKER_REGISTRY}text_integrity_inspector:latest; fi
+  rules:
+    - if: $CI_COMMIT_TAG
