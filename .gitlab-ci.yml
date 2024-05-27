@@ -1,0 +1,95 @@
+# image python:3.8 for have python and git
+image: python:3.8
+
+# This folder is cached between builds
+# http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+cache:
+  paths:
+  - ~/.cache/pip/
+  - ~/.cache/pipenv
+
+stages:
+- build
+- test
+- deploy
+
+build:
+  stage: build
+  variables: 
+    GIT_DEPTH: 0 #pbr module need git history
+  tags:
+  - docker_linux
+  script:
+  - python -V                                   # Print out python version for debugging
+  - pip install pipenv
+  - pipenv install --dev
+  - pipenv run pytest  --cov-report=xml:coverage.xml  --cov=textIntegrityInspector/  --junit-xml=junit.xml --cov-report term
+  - pipenv requirements > requirements.txt
+  - sed -i 's/==/>=/' requirements.txt
+  - pipenv run python -m build
+  artifacts:
+    paths: 
+    - coverage.xml
+    - junit.xml
+    - dist/*
+    reports:
+      junit: junit.xml
+      coverage_report: 
+        coverage_format: cobertura
+        path: coverage.xml
+  coverage: '/TOTAL.*\s([.\d]+)%/'
+
+  
+Docker images:
+  stage: build
+  needs: 
+  - build
+  dependencies: 
+  - build
+  #stage: BuildDocker
+  image: docker:20.10.17-cli-alpine3.16
+  tags:
+  - docker_linux
+  - docker_build
+  script:
+  - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWD
+  - BUILD_OPTIONS="${DOCKER_BUILD_OPTIONS_DEFAULT} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA}"
+  - docker build ${BUILD_OPTIONS} -t ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG} .
+  - if [ ! -z ${DOCKER_REGISTRY+x} ]; then docker login -u ${DOCKER_REGISTRY_USER} -p ${DOCKER_REGISTRY_PASSWD} ${DOCKER_REGISTRY}; fi
+  - if [ ! -z ${DOCKER_REGISTRY+x} ]; then docker push  ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG}; fi
+
+  
+check-utf-8:
+  image: 
+    name: ${DOCKER_REGISTRY}text_integrity_inspector:${CI_COMMIT_REF_SLUG}
+    entrypoint: [""]
+  stage: test
+  needs: []
+  tags:
+  - docker_linux
+  script:
+  - textIntegrityInspector 
+
+deploy_wheels:
+  stage: deploy
+  needs:
+  - build
+  dependencies: 
+  - build
+  tags:
+  - docker_linux
+  script:
+  # Push Python wheels
+  - pip install twine
+  - if [ ! -z ${RUNNER_CERT_CA_PATH+x} ]; then export export TWINE_CERT=${RUNNER_CERT_CA_PATH}; fi
+  - cd dist 
+  - ls
+  - for file in $(ls); do twine upload -u $PYPI_USER -p $PYPI_PASSWD  --repository-url ${PYPI_SERVER}/ ${file}; done
+  - ls *
+  - echo $0 || true
+  - ls testIntegrityInspector*.whl || true
+  - echo "twine upload -u $PYPI_USER -p $PYPI_PASSWD --repository-url ${PYPI_SERVER}/ testIntegrityInspector*.whl" || true
+  - twine upload -u $PYPI_USER -p $PYPI_PASSWD  --repository-url ${PYPI_SERVER}/ testIntegrityInspector*.whl || true
+  only:
+  - /^main$/
+  - /^develop$/

@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+argparse = "*"
+PyYAML = "*"
+toml = "*"
+pbr = "*"
+
+[dev-packages]
+pipenv = "*"
+coverage = "*"
+pytest = "*"
+pytest-cov = "*"
+build = "*"
+twine = "*"
+# tox = "*"
+
+[requires]
+python_version = "3.8"
