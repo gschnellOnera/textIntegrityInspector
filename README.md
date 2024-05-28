@@ -43,7 +43,7 @@ This will validate all files in the current directory with the `.py` extension.
 
 ### Configuration
 
-By default, `textIntegrityInspector` looks for the configuration file `.textIntegrityInspector.yaml` in the current directory. The file format is as follows.
+By default, `textIntegrityInspector` looks for the configuration file `.textIntegrityInspector.[yaml|toml]` in the current directory. The file format is as follows.
 
 YAML format
 

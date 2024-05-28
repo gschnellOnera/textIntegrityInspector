@@ -9,6 +9,8 @@ on:
     branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main" ]
+  release: 
+    types: [published]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -36,7 +38,7 @@ jobs:
         run: echo Hello, world!
 
       # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Run build
         run: |
           PATH=$PATH:/github/home/.local/bin
           git log
@@ -54,4 +56,46 @@ jobs:
           echo 'sed -i "s/==/>=/" requirements.txt'
           sed -i 's/==/>=/' requirements.txt
           echo 'pipenv run python -m build'
-          pipenv run python -m build
+          pipenv run python -m build 
+      - name: Upload dist directory
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: dist/*
+  # Publish the wheel to PyPI
+  deploy:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/textIntegrityInspector
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+          set-safe-directory: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Download dist directory
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+          path: dist
+
+      - name: Install dependencies
+        run: |
+          echo 'pip install pipenv'
+          pip install pipenv
+          echo 'rm -f .env'
+          rm -f .env
+          echo 'pipenv install --dev'
+          pipenv install --dev
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
