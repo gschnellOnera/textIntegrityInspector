@@ -45,8 +45,6 @@ jobs:
           python -V                                   # Print out python version for debugging
           echo 'pip install pipenv'
           pip install pipenv
-          echo 'rm -f .env'
-          rm -f .env
           echo 'pipenv install --dev'
           pipenv install --dev
           echo 'pipenv run pytest  --cov-report=xml:coverage.xml  --cov=textIntegrityInspector/  --junit-xml=junit.xml --cov-report term'
@@ -92,8 +90,6 @@ jobs:
         run: |
           echo 'pip install pipenv'
           pip install pipenv
-          echo 'rm -f .env'
-          rm -f .env
           echo 'pipenv install --dev'
           pipenv install --dev
 
