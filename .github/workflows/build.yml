@@ -56,7 +56,7 @@ jobs:
           echo 'pipenv run python -m build'
           pipenv run python -m build 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v4.0.1 
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload dist directory
