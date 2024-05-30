@@ -1,6 +1,9 @@
 # Text Integrity Inspector
-![coverage](https://gitlab-dsfm.onecert.fr/gschnell/textintegrityinspector/badges/develop/coverage.svg?job=build)  
+![ci](https://github.com/gschnellOnera/textIntegrityInspector/actions/workflows/build.yml/badge.svg?branch=main)
+[![codecov](https://codecov.io/gh/gschnellOnera/textIntegrityInspector/graph/badge.svg?token=IZYUWJ63CQ)](https://codecov.io/gh/gschnellOnera/textIntegrityInspector)
+
 ![Text Integrity Inspector](./doc/images/TextIntegrityLogo180.png)  
+
 The Text Integrity Inspector package provides a tool for validating the integrity of UTF-8 text files based on language-specific character sets.
 
 ## Tnstallation
